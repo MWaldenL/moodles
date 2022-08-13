@@ -19,3 +19,4 @@ Are you feeling happy? Bummed out? Or just bored? Moodles is a mood tracker iOS 
 
 ## Running the app
 Open a terminal in the project folder and type ```pod install```. Then, build the project in XCode and run the app in a simulator.
+For the server, make sure you create a .env file with a JWT secret key generated. Then set your NODE_ENV to production and run the server separately.
