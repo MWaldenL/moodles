@@ -1,0 +1,504 @@
+info:
+  title: Mood Tracker
+  version: "1.0"
+paths:
+  # User
+  /user:
+    x-swagger-router-controller: Users
+    x-swagger-router-handle-subpaths: true
+    post:
+      tags:
+        - Users
+      summary: New User
+      description: Create a new user
+      operationId: createUserV1
+      responses:
+        "200":
+          description: User created
+          schema:
+            type: string
+            format: uuid
+      parameters:
+        - required: true
+          name: body
+          in: body
+          schema:
+            $ref: "#/definitions/User"
+      consumes:
+        - application/json
+      produces:
+        - application/json
+
+  /user/login:
+    x-swagger-router-controller: Users
+    x-swagger-router-handle-subpaths: true
+    post:
+      tags:
+        - Users
+      summary: Login User
+      description: User Logs In by User ID
+      operationId: userLoginV1
+      responses:
+        "200":
+          description: User has logged in
+          schema:
+            type: string
+            format: uuid
+
+      parameters:
+        - required: true
+          name: body
+          in: body
+          schema:
+            type: object
+            required:
+              - email
+              - password
+            properties:
+              email:
+                type: string
+                format: email
+              password:
+                type: string
+                format: password
+      consumes:
+        - application/json
+      produces:
+        - application/json
+
+  /user/{userId}:
+    x-swagger-router-controller: Users
+    x-swagger-router-handle-subpaths: true
+    get:
+      summary: Get User
+      description: Get **single** User by Id
+      tags:
+        - Users
+      operationId: getSingleUserV1
+      parameters:
+        - name: includeEntries
+          in: query
+          format: int32
+          enum:
+            - 0
+            - 1
+          type: number
+        - &a1
+          name: userId
+          in: path
+          required: true
+          type: string
+      responses:
+        "200":
+          description: Found User
+          schema:
+            $ref: "#/definitions/User"
+      produces:
+        - application/json
+    put:
+      tags:
+        - Users
+      summary: Update User
+      description: Update User By Id
+      operationId: updateUserV1
+      parameters:
+        - *a1
+        - required: true
+          name: body
+          in: body
+          schema:
+            $ref: "#/definitions/User"
+      responses:
+        "200":
+          description: User Updated
+          schema:
+            $ref: "#/definitions/User"
+        "404":
+          description: Entry not found
+        "500":
+          description: Internal server error
+      consumes:
+        - application/json
+      produces:
+        - application/json
+    delete:
+      tags:
+        - Users
+      summary: Delete User
+      description: Delete User By ID
+      operationId: deleteUserV1
+      parameters:
+        - *a1
+      responses:
+        "200":
+          description: User Deleted
+        "500":
+          description: Internal server error - unable to delete user
+
+  # Entries
+  /entries/{userId}:
+    x-swagger-router-controller: Entries
+    x-swagger-router-handle-subpaths: true
+    get:
+      summary: Get Entries
+      description: Get All Entries by User Id
+      operationId: getEntriesV1
+      tags:
+        - Entries
+      parameters:
+        - name: dateFrom
+          in: query
+          format: date-time
+          type: string
+        - name: dateTo
+          in: query
+          format: date-time
+          type: string
+        - *a1
+      responses:
+        "200":
+          description: Found Entry
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Entry"
+        "404":
+          description: 404 - Entry not found
+      produces:
+        - application/json
+    post:
+      summary: New Entry
+      description: Create a new entry with User Id
+      operationId: addNewEntryV1
+      tags:
+        - Entries
+      parameters:
+        - *a1
+        - required: true
+          name: body
+          in: body
+          schema:
+            $ref: "#/definitions/NewEntry"
+      responses:
+        "200":
+          description: Entry created
+        "500":
+          description:
+            Internal server error - entry creation failed - unable to create
+            entry - unable to update entry
+      consumes:
+        - application/json
+        
+  /entries/{userId}/{entryId}:
+    x-swagger-router-controller: Entries
+    x-swagger-router-handle-subpaths: true
+    get:
+      summary: Get Entry
+      description: Get **single** Entry by User Id and Entry Id
+      operationId: getOneEntryV1
+      tags:
+        - Entries
+      parameters:
+        - *a1
+        - &a2
+          name: entryId
+          in: path
+          description: Entry Id
+          required: true
+          format: uuid
+          type: string
+      responses:
+        "200":
+          description: Found Entry
+          schema:
+            $ref: "#/definitions/Entry"
+        "404":
+          description: Entry not found
+      produces:
+        - application/json
+    put:
+      tags:
+        - Entries
+      summary: Update Entry
+      description: Update Entry By User Id and Entry Id
+      operationId: updateEntryV1
+      parameters:
+        - *a1
+        - *a2
+        - required: true
+          name: body
+          in: body
+          schema:
+            $ref: "#/definitions/Entry"
+      responses:
+        "200":
+          description: Entry Updated
+          schema:
+            $ref: "#/definitions/Entry"
+        "404":
+          description: Entry not found
+        "500":
+          description: Internal server error
+      consumes:
+        - application/json
+      produces:
+        - application/json
+    delete:
+      summary: Delete Entry
+      description: Delete Entry By User Id and Entry Id
+      operationId: deleteEntryV1
+      tags:
+        - Entries
+      parameters:
+        - *a2
+        - *a1
+      responses:
+        "200":
+          description: Entry Deleted
+        "500":
+          description: Internal server error - unable to delete entry
+
+  # Tags
+  /tags/{userId}:
+    x-swagger-router-controller: Tags
+    x-swagger-router-handle-subpaths: true
+    get:
+      summary: Get Tags
+      description: Get tags
+      operationId: getTagsV1
+      tags:
+        - Tags
+      parameters:
+        - *a1
+      responses:
+        "200":
+          description: An array of tags
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Tag"
+        "404":
+          description: 404 not found
+      produces:
+        - application/json
+    post:
+      summary: New Tag
+      description: Create a New Tag
+      operationId: addNewTagV1
+      tags:
+        - Tags
+      parameters:
+        - *a1
+        - name: body
+          in: body
+          schema:
+            $ref: "#/definitions/Tag"
+      responses:
+        "200":
+          description: Tag Created
+        "400":
+          description: Bad Request
+        "409":
+          description: Conflict
+      consumes:
+        - application/json
+  
+  /tags/{userId}/{tagId}":
+    x-swagger-router-controller: Tags
+    x-swagger-router-handle-subpaths: true
+    get:
+      summary: Get Tag
+      description: Get a specific tag
+      operationId: getTagV1
+      tags:
+        - Tags
+      parameters:
+        - *a1
+        - &a3
+          name: tagId
+          in: path
+          description: Tag Id
+          required: true
+          format: uuid
+          type: string
+      responses:
+        "200":
+          description: Found Tag
+          schema:
+            $ref: "#/definitions/Tag"
+      produces:
+        - application/json
+    put:
+      tags:
+        - Tags
+      summary: Update Tag
+      description: By User Id and Tag Id
+      operationId: updateTagV1
+      parameters:
+        - *a1
+        - *a3
+        - required: true
+          name: body
+          in: body
+          schema:
+            $ref: "#/definitions/Tag"
+      responses:
+        "200":
+          description: Tag Updated
+          schema:
+            $ref: "#/definitions/Tag"
+        "404":
+          description: Entry not found
+        "500":
+          description: Internal server error
+      consumes:
+        - application/json
+      produces:
+        - application/json
+    delete:
+      tags:
+        - Tags
+      summary: Delete Entry
+      description: Delete Tag By User Id and Tag Id
+      operationId: deleteTagV1
+      parameters:
+        - *a1
+        - *a3
+      responses:
+        "200":
+          description: Entry Deleted
+        "404":
+          description: Entry not found
+        "500":
+          description: Internal server error
+
+swagger: "2.0"
+schemes:
+  - https
+  - http
+host: api.server.test
+basePath: /v1
+# securityDefinitions: null
+definitions:
+  User:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uuid
+        readOnly: true
+      name: 
+        type: string
+        example: Mats
+      email:
+        maxLength: 100
+        minLength: 4
+        type: string
+        format: email
+      password:
+        maxLength: 50
+        minLength: 7
+        type: string
+        format: password
+      entries:
+        type: array
+        items:
+          type: string
+      tags:
+        type: array
+        items:
+          type: string
+
+  NewEntry: 
+    type: object
+    properties:
+      id:
+        type: string
+        format: uuid
+        readOnly: true
+      datecreated:
+        type: string
+        format: date-time
+        example: 2022-07-21T17:32:28Z
+      moodLevel:
+        type: number
+        format: integer
+      note:
+        type: string
+        maxLength: 250
+        minLength: 0
+        example: This is a note
+      tags:
+        type: array
+        items:
+          $ref: "#definitions/EntryTag"
+
+  Entry:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uuid
+        readOnly: true
+      datecreated:
+        type: string
+        format: date-time
+        example: 2022-07-21T17:32:28Z
+      dateupdated:
+        type: string
+        format: date-time
+        example: 2022-07-21T17:32:28Z
+      moodLevel:
+        type: number
+        format: integer
+      note:
+        type: string
+        maxLength: 250
+        minLength: 0
+        example: This is a note
+      tags:
+        type: array
+        items:
+          type: string
+
+  EntryTag:
+    type: object
+    properties:
+      _id: 
+        type: string
+        format: uuid
+        # readOnly: true
+      tagName:
+        type: string
+        minLength: 2
+        maxLength: 20
+      fromUserTags: 
+        type: boolean
+
+  Tag:
+    type: object
+    properties:
+      id:
+        type: string
+        format: uuid
+        readOnly: true
+      tagName:
+        type: string
+        minLength: 2
+        maxLength: 20
+      moodList: 
+        type: array
+        items: 
+          type: number
+          format: integer
+      datesLogged: 
+        type: array
+        items: 
+          type: string
+          format: date-time
+
+x-components:
+  parameters:
+    UserIdParam: *a1
+    EntryIdParam: *a2
+    TagIdParam: *a3
